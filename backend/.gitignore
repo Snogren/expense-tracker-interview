@@ -1,0 +1,27 @@
+node_modules/
+*.dump
+
+.env
+!.env.example
+
+.DS_store
+.idea
+
+logs
+
+src/scripts/*.csv
+src/scripts/scripts.txt
+/*_dump.[ct]sv
+
+dist
+# Sentry Config File
+.sentryclirc
+
+# Generated database types
+src/dbTypes/
+
+# Generated eval runs
+eval-results/
+
+# scripts documentation output
+scripts-docs.json
