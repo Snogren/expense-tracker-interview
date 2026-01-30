@@ -4,12 +4,13 @@ import logger from './logger.js';
 import authRoutes from './routes/auth.js';
 import expenseRoutes from './routes/expenses.js';
 import categoryRoutes from './routes/categories.js';
+import importRoutes from './routes/import.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 
 // Request logging middleware
 app.use((req: Request, res: Response, next: NextFunction) => {
@@ -32,6 +33,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/expenses', expenseRoutes);
 app.use('/api/categories', categoryRoutes);
+app.use('/api/import', importRoutes);
 
 // Health check
 app.get('/api/health', (_req, res) => {
