@@ -1,10 +1,18 @@
 import { apiRequest } from './client';
 import type { Expense, CreateExpenseData, UpdateExpenseData, MonthlyTotal } from '../types';
 
-export async function getExpenses(search?: string): Promise<Expense[]> {
-  const params = new URLSearchParams();
-  if (search) params.append('search', search);
-  const query = params.toString() ? `?${params}` : '';
+export interface GetExpensesParams {
+  search?: string;
+  startDate?: string;
+  endDate?: string;
+}
+
+export async function getExpenses(params?: GetExpensesParams): Promise<Expense[]> {
+  const searchParams = new URLSearchParams();
+  if (params?.search) searchParams.append('search', params.search);
+  if (params?.startDate) searchParams.append('startDate', params.startDate);
+  if (params?.endDate) searchParams.append('endDate', params.endDate);
+  const query = searchParams.toString() ? `?${searchParams}` : '';
   return apiRequest<Expense[]>(`/expenses${query}`);
 }
 

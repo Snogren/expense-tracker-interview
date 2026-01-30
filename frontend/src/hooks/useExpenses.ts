@@ -1,11 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import * as expensesApi from '../api/expenses';
+import type { GetExpensesParams } from '../api/expenses';
 import type { CreateExpenseData, UpdateExpenseData } from '../types';
 
-export function useExpenses(search?: string) {
+export function useExpenses(params?: GetExpensesParams) {
   return useQuery({
-    queryKey: ['expenses', search],
-    queryFn: () => expensesApi.getExpenses(search),
+    queryKey: ['expenses', params],
+    queryFn: () => expensesApi.getExpenses(params),
   });
 }
 
