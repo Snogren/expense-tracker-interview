@@ -4,6 +4,7 @@ import { Layout } from './components/Layout';
 import { Login } from './pages/Login';
 import { Dashboard } from './pages/Dashboard';
 import { Expenses } from './pages/Expenses';
+import { Import } from './pages/Import';
 
 export default function App() {
   const {
@@ -53,6 +54,7 @@ export default function App() {
           }
         />
         <Route path="/expenses" element={<Expenses />} />
+        <Route path="/import" element={<Import />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Layout>
