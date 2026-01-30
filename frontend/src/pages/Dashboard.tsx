@@ -1,6 +1,6 @@
 import { useExpenses, useMonthlyTotal } from '../hooks/useExpenses';
 import { ExpenseList } from '../components/ExpenseList';
-import { DollarSign, TrendingUp, Receipt } from 'lucide-react';
+import { DollarSign, TrendingUp, TrendingDown, Receipt } from 'lucide-react';
 
 interface DashboardProps {
   onEditExpense: (expense: { id: number }) => void;
@@ -10,10 +10,22 @@ export function Dashboard({ onEditExpense }: DashboardProps) {
   const { data: expenses, isLoading: expensesLoading } = useExpenses();
   const { data: monthlyTotal, isLoading: totalLoading } = useMonthlyTotal();
 
+  const now = new Date();
+  const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const { data: lastMonthTotal, isLoading: lastMonthLoading } = useMonthlyTotal(
+    lastMonth.getFullYear(),
+    lastMonth.getMonth() + 1
+  );
+
   const recentExpenses = expenses?.slice(0, 5) || [];
   const totalExpenses = expenses?.length || 0;
 
   const monthName = new Date().toLocaleDateString('en-US', { month: 'long' });
+
+  const currentTotal = monthlyTotal?.total || 0;
+  const previousTotal = lastMonthTotal?.total || 0;
+  const difference = currentTotal - previousTotal;
+  const percentChange = previousTotal > 0 ? (difference / previousTotal) * 100 : 0;
 
   return (
     <div className="space-y-6">
@@ -35,6 +47,16 @@ export function Dashboard({ onEditExpense }: DashboardProps) {
                   <dd className="text-lg font-semibold text-gray-900">
                     {totalLoading ? '...' : `$${monthlyTotal?.total.toFixed(2) || '0.00'}`}
                   </dd>
+                  {!totalLoading && !lastMonthLoading && previousTotal > 0 && (
+                    <dd className={`flex items-center text-sm ${difference >= 0 ? 'text-red-600' : 'text-green-600'}`}>
+                      {difference >= 0 ? (
+                        <TrendingUp className="h-4 w-4 mr-1" />
+                      ) : (
+                        <TrendingDown className="h-4 w-4 mr-1" />
+                      )}
+                      {Math.abs(percentChange).toFixed(1)}% vs last month
+                    </dd>
+                  )}
                 </dl>
               </div>
             </div>
