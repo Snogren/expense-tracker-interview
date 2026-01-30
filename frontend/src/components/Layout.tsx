@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Receipt, LogOut, Upload } from 'lucide-react';
+import { LayoutDashboard, Receipt, LogOut, Upload, Mail } from 'lucide-react';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -13,6 +13,7 @@ export function Layout({ children, onLogout }: LayoutProps) {
     { path: '/', label: 'Dashboard', icon: LayoutDashboard },
     { path: '/expenses', label: 'Expenses', icon: Receipt },
     { path: '/import', label: 'Import', icon: Upload },
+    { path: '/email-receipt', label: 'Email Receipt', icon: Mail },
   ];
 
   return (
