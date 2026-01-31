@@ -12,8 +12,8 @@ export function Layout({ children, onLogout }: LayoutProps) {
   const navItems = [
     { path: '/', label: 'Dashboard', icon: LayoutDashboard },
     { path: '/expenses', label: 'Expenses', icon: Receipt },
-    { path: '/import', label: 'Import', icon: Upload },
-    { path: '/email-receipt', label: 'Email Receipt', icon: Mail },
+    { path: '/import', label: 'Import CSV', icon: Upload },
+    { path: '/email-import', label: 'Import Email', icon: Mail },
   ];
 
   return (

@@ -142,3 +142,20 @@ export interface ReceiptAnalysisResult {
   isReceipt: boolean;
   data: ExtractedReceiptData | null;
 }
+
+// Email import types
+export interface DraftExpense {
+  emailId: string;
+  emailSubject: string;
+  emailFrom: string;
+  merchant: string;
+  amount: number;
+  date: string;
+  description: string;
+  categoryId: number;
+  categoryName: string;
+}
+
+export interface ScanEmailsResult {
+  draftExpenses: DraftExpense[];
+}

@@ -1,5 +1,5 @@
 import { apiRequest, ApiError } from './client';
-import type { ReceiptAnalysisResult } from '../types';
+import type { ReceiptAnalysisResult, ScanEmailsResult } from '../types';
 
 export async function analyzeEmailReceipt(emailContent: string): Promise<ReceiptAnalysisResult> {
   return apiRequest<ReceiptAnalysisResult>('/receipts/analyze', {
@@ -25,4 +25,10 @@ export async function analyzePdfReceipt(file: File): Promise<ReceiptAnalysisResu
   }
 
   return response.json();
+}
+
+export async function scanEmails(): Promise<ScanEmailsResult> {
+  return apiRequest<ScanEmailsResult>('/receipts/scan-emails', {
+    method: 'POST',
+  });
 }
