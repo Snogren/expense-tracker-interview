@@ -9,7 +9,7 @@ import {
   filterReceiptEmails,
   extractExpensesFromEmails,
 } from '../services/llmService.js';
-import { getMockEmails } from '../services/mockEmailService.js';
+import type { Email } from '../services/mockEmailService.js';
 import db from '../db/knex.js';
 import type { Category } from '../types/index.js';
 
@@ -109,10 +109,22 @@ router.post('/analyze-pdf', upload.single('pdf'), async (req: Request, res: Resp
   }
 });
 
-router.post('/scan-emails', async (_req: Request, res: Response) => {
+const emailSchema = z.object({
+  id: z.string(),
+  from: z.string(),
+  subject: z.string(),
+  date: z.string(),
+  body: z.string(),
+});
+
+const scanEmailsSchema = z.object({
+  emails: z.array(emailSchema).min(1).max(100),
+});
+
+router.post('/scan-emails', async (req: Request, res: Response) => {
   try {
-    // Get mock emails (in real implementation, this would fetch from Gmail API)
-    const emails = getMockEmails();
+    const { emails: rawEmails } = scanEmailsSchema.parse(req.body);
+    const emails: Email[] = rawEmails;
 
     logger.info({ totalEmails: emails.length }, 'Scanning emails for receipts');
 
@@ -162,6 +174,11 @@ router.post('/scan-emails', async (_req: Request, res: Response) => {
 
     res.json({ draftExpenses });
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      logger.info({ errors: error.errors }, 'Email scan validation failed');
+      res.status(400).json({ error: 'Invalid email data', details: error.errors });
+      return;
+    }
     logger.error({ err: error }, 'Failed to scan emails');
     res.status(500).json({ error: 'Failed to scan emails for receipts' });
   }

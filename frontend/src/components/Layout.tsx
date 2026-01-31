@@ -13,7 +13,7 @@ export function Layout({ children, onLogout }: LayoutProps) {
     { path: '/', label: 'Dashboard', icon: LayoutDashboard },
     { path: '/expenses', label: 'Expenses', icon: Receipt },
     { path: '/import', label: 'Import CSV', icon: Upload },
-    { path: '/email-import', label: 'Import Email', icon: Mail },
+    { path: '/email-import', label: 'AI Mode', icon: Mail },
   ];
 
   return (

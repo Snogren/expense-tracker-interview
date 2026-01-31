@@ -1,11 +1,11 @@
-import { useState } from 'react';
-import { Mail, Sparkles, Check, CheckCircle, SkipForward } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { Mail, Sparkles, Check, CheckCircle, SkipForward, Upload, FileJson } from 'lucide-react';
 import { useScanEmails } from '../hooks/useReceiptAnalysis';
 import { useCreateExpense } from '../hooks/useExpenses';
 import { useCategories } from '../hooks/useCategories';
-import type { DraftExpense, CreateExpenseData } from '../types';
+import type { DraftExpense, CreateExpenseData, EmailData } from '../types';
 
-type Step = 'start' | 'scanning' | 'review' | 'complete';
+type Step = 'upload' | 'scanning' | 'review' | 'complete';
 
 interface ReviewedExpense extends DraftExpense {
   status: 'pending' | 'accepted' | 'skipped';
@@ -13,11 +13,16 @@ interface ReviewedExpense extends DraftExpense {
 }
 
 export function EmailImport() {
-  const [step, setStep] = useState<Step>('start');
+  const [step, setStep] = useState<Step>('upload');
+  const [emails, setEmails] = useState<EmailData[]>([]);
+  const [fileName, setFileName] = useState<string>('');
+  const [parseError, setParseError] = useState<string>('');
   const [draftExpenses, setDraftExpenses] = useState<ReviewedExpense[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [importedCount, setImportedCount] = useState(0);
   const [skippedCount, setSkippedCount] = useState(0);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const scanEmails = useScanEmails();
   const createExpense = useCreateExpense();
@@ -25,9 +30,49 @@ export function EmailImport() {
 
   const currentExpense = draftExpenses[currentIndex];
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setParseError('');
+    setFileName(file.name);
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const json = JSON.parse(event.target?.result as string);
+
+        // Validate the structure
+        if (!Array.isArray(json)) {
+          throw new Error('JSON must be an array of emails');
+        }
+
+        const validatedEmails: EmailData[] = json.map((email: unknown, index: number) => {
+          const e = email as Record<string, unknown>;
+          if (!e.id || !e.from || !e.subject || !e.date || !e.body) {
+            throw new Error(`Email at index ${index} is missing required fields (id, from, subject, date, body)`);
+          }
+          return {
+            id: String(e.id),
+            from: String(e.from),
+            subject: String(e.subject),
+            date: String(e.date),
+            body: String(e.body),
+          };
+        });
+
+        setEmails(validatedEmails);
+      } catch (err) {
+        setParseError(err instanceof Error ? err.message : 'Failed to parse JSON file');
+        setEmails([]);
+      }
+    };
+    reader.readAsText(file);
+  };
+
   const handleStartScan = () => {
     setStep('scanning');
-    scanEmails.mutate(undefined, {
+    scanEmails.mutate(emails, {
       onSuccess: (result) => {
         if (result.draftExpenses.length === 0) {
           setStep('complete');
@@ -48,7 +93,7 @@ export function EmailImport() {
         }
       },
       onError: () => {
-        setStep('start');
+        setStep('upload');
       },
     });
   };
@@ -83,7 +128,6 @@ export function EmailImport() {
     if (nextPendingIndex !== -1) {
       setCurrentIndex(nextPendingIndex);
     } else {
-      // Check if there are any pending before current
       const firstPendingIndex = draftExpenses.findIndex((e) => e.status === 'pending');
       if (firstPendingIndex !== -1 && firstPendingIndex !== currentIndex) {
         setCurrentIndex(firstPendingIndex);
@@ -104,12 +148,18 @@ export function EmailImport() {
   };
 
   const handleReset = () => {
-    setStep('start');
+    setStep('upload');
+    setEmails([]);
+    setFileName('');
+    setParseError('');
     setDraftExpenses([]);
     setCurrentIndex(0);
     setImportedCount(0);
     setSkippedCount(0);
     scanEmails.reset();
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   return (
@@ -117,31 +167,100 @@ export function EmailImport() {
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Import from Email</h1>
         <p className="mt-1 text-sm text-gray-500">
-          Scan your emails for receipts and order confirmations, then review and import them as expenses.
+          Upload a JSON file containing email data, and we'll use AI to find receipts and extract expense information.
         </p>
       </div>
 
-      {/* Step: Start */}
-      {step === 'start' && (
-        <div className="bg-white shadow rounded-lg p-8 text-center">
-          <Mail className="w-16 h-16 mx-auto text-indigo-500 mb-4" />
-          <h2 className="text-lg font-medium text-gray-900 mb-2">Scan Your Emails</h2>
-          <p className="text-sm text-gray-500 mb-6 max-w-md mx-auto">
-            We'll scan your recent emails to find receipts and order confirmations,
-            then use AI to extract expense information.
-          </p>
-          {scanEmails.isError && (
-            <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-md text-sm">
-              Failed to scan emails. Please try again.
+      {/* Step: Upload */}
+      {step === 'upload' && (
+        <div className="bg-white shadow rounded-lg p-6">
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Upload Email Data (JSON)
+              </label>
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
+                  emails.length > 0
+                    ? 'border-indigo-300 bg-indigo-50'
+                    : 'border-gray-300 hover:border-gray-400'
+                }`}
+              >
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="application/json,.json"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+                {emails.length > 0 ? (
+                  <div className="space-y-2">
+                    <FileJson className="w-12 h-12 mx-auto text-indigo-500" />
+                    <p className="text-sm font-medium text-gray-900">{fileName}</p>
+                    <p className="text-sm text-indigo-600">{emails.length} emails loaded</p>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEmails([]);
+                        setFileName('');
+                        if (fileInputRef.current) fileInputRef.current.value = '';
+                      }}
+                      className="text-sm text-gray-500 hover:text-gray-700"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Upload className="w-12 h-12 mx-auto text-gray-400" />
+                    <p className="text-sm text-gray-600">
+                      <span className="font-medium text-indigo-600">Click to upload</span> or drag and drop
+                    </p>
+                    <p className="text-xs text-gray-500">JSON file with email data</p>
+                  </div>
+                )}
+              </div>
             </div>
-          )}
-          <button
-            onClick={handleStartScan}
-            className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"
-          >
-            <Sparkles className="w-5 h-5 mr-2" />
-            Start Scanning
-          </button>
+
+            {parseError && (
+              <div className="p-3 bg-red-50 text-red-700 rounded-md text-sm">
+                {parseError}
+              </div>
+            )}
+
+            {scanEmails.isError && (
+              <div className="p-3 bg-red-50 text-red-700 rounded-md text-sm">
+                Failed to scan emails. Please try again.
+              </div>
+            )}
+
+            <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-600">
+              <p className="font-medium text-gray-700 mb-2">Expected JSON format:</p>
+              <pre className="text-xs bg-gray-100 p-2 rounded overflow-x-auto">
+{`[
+  {
+    "id": "1",
+    "from": "receipts@store.com",
+    "subject": "Your receipt",
+    "date": "2025-01-28",
+    "body": "Thank you for your purchase..."
+  }
+]`}
+              </pre>
+            </div>
+
+            <div className="flex justify-end">
+              <button
+                onClick={handleStartScan}
+                disabled={emails.length === 0}
+                className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Sparkles className="w-5 h-5 mr-2" />
+                Scan for Receipts
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -151,7 +270,7 @@ export function EmailImport() {
           <div className="animate-pulse">
             <Sparkles className="w-16 h-16 mx-auto text-indigo-500 mb-4" />
           </div>
-          <h2 className="text-lg font-medium text-gray-900 mb-2">Scanning Emails...</h2>
+          <h2 className="text-lg font-medium text-gray-900 mb-2">Scanning {emails.length} Emails...</h2>
           <p className="text-sm text-gray-500">
             Using AI to find and extract receipts from your emails.
           </p>
@@ -308,7 +427,7 @@ export function EmailImport() {
           <h2 className="text-lg font-medium text-gray-900 mb-2">Import Complete!</h2>
           {draftExpenses.length === 0 ? (
             <p className="text-sm text-gray-500 mb-6">
-              No receipts were found in your emails.
+              No receipts were found in the uploaded emails.
             </p>
           ) : (
             <p className="text-sm text-gray-500 mb-6">
@@ -320,7 +439,7 @@ export function EmailImport() {
             onClick={handleReset}
             className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"
           >
-            Scan Again
+            Import More
           </button>
         </div>
       )}
