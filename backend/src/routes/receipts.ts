@@ -3,13 +3,7 @@ import { z } from 'zod';
 import multer from 'multer';
 import logger from '../logger.js';
 import { authenticateToken } from '../middleware/auth.js';
-import {
-  analyzeEmailForReceipt,
-  analyzePdfForReceipt,
-  filterReceiptEmails,
-  extractExpensesFromEmails,
-} from '../services/llmService.js';
-import { getMockEmails } from '../services/mockEmailService.js';
+import { analyzeEmailForReceipt, analyzePdfForReceipt } from '../services/llmService.js';
 import db from '../db/knex.js';
 import type { Category } from '../types/index.js';
 
@@ -106,64 +100,6 @@ router.post('/analyze-pdf', upload.single('pdf'), async (req: Request, res: Resp
   } catch (error) {
     logger.error({ err: error }, 'Failed to analyze PDF receipt');
     res.status(500).json({ error: 'Failed to analyze PDF content' });
-  }
-});
-
-router.post('/scan-emails', async (_req: Request, res: Response) => {
-  try {
-    // Get mock emails (in real implementation, this would fetch from Gmail API)
-    const emails = getMockEmails();
-
-    logger.info({ totalEmails: emails.length }, 'Scanning emails for receipts');
-
-    // Step 1: Use LLM to filter emails that contain receipts
-    const receiptEmailIds = await filterReceiptEmails(emails);
-
-    // Step 2: Get the filtered emails
-    const receiptEmails = emails.filter((e) => receiptEmailIds.includes(e.id));
-
-    if (receiptEmails.length === 0) {
-      res.json({ draftExpenses: [] });
-      return;
-    }
-
-    // Step 3: Extract expense data from filtered emails
-    const extractedExpenses = await extractExpensesFromEmails(receiptEmails);
-
-    // Step 4: Match categories and prepare draft expenses
-    const categories = await db('categories').select<Category[]>('*');
-
-    const draftExpenses = await Promise.all(
-      extractedExpenses.map(async (expense) => {
-        const email = receiptEmails.find((e) => e.id === expense.emailId);
-
-        let matchedCategory = categories.find(
-          (c) => c.name.toLowerCase() === expense.category.toLowerCase()
-        );
-        if (!matchedCategory) {
-          matchedCategory = categories.find((c) => c.name.toLowerCase() === 'other') || categories[0];
-        }
-
-        return {
-          emailId: expense.emailId,
-          emailSubject: email?.subject || '',
-          emailFrom: email?.from || '',
-          merchant: expense.merchant,
-          amount: expense.amount,
-          date: expense.date,
-          description: expense.description,
-          categoryId: matchedCategory?.id,
-          categoryName: matchedCategory?.name,
-        };
-      })
-    );
-
-    logger.info({ draftCount: draftExpenses.length }, 'Generated draft expenses from emails');
-
-    res.json({ draftExpenses });
-  } catch (error) {
-    logger.error({ err: error }, 'Failed to scan emails');
-    res.status(500).json({ error: 'Failed to scan emails for receipts' });
   }
 });
 

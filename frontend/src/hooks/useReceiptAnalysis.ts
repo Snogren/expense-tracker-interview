@@ -12,9 +12,3 @@ export function useAnalyzePdfReceipt() {
     mutationFn: (file: File) => receiptsApi.analyzePdfReceipt(file),
   });
 }
-
-export function useScanEmails() {
-  return useMutation({
-    mutationFn: () => receiptsApi.scanEmails(),
-  });
-}
