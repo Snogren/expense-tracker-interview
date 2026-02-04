@@ -126,19 +126,3 @@ export interface ImportResult {
   skippedCount: number;
   history: ImportHistory;
 }
-
-// Receipt extraction types
-export interface ExtractedReceiptData {
-  merchant: string;
-  amount: number;
-  date: string;
-  category: string;
-  categoryId: number;
-  categoryName: string;
-  description: string;
-}
-
-export interface ReceiptAnalysisResult {
-  isReceipt: boolean;
-  data: ExtractedReceiptData | null;
-}

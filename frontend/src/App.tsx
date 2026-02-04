@@ -5,7 +5,6 @@ import { Login } from './pages/Login';
 import { Dashboard } from './pages/Dashboard';
 import { Expenses } from './pages/Expenses';
 import { Import } from './pages/Import';
-import { EmailReceipt } from './pages/EmailReceipt';
 
 export default function App() {
   const {
@@ -56,7 +55,6 @@ export default function App() {
         />
         <Route path="/expenses" element={<Expenses />} />
         <Route path="/import" element={<Import />} />
-        <Route path="/email-receipt" element={<EmailReceipt />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Layout>

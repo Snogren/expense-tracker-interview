@@ -27,7 +27,7 @@ cd backend
 npm install
 npm run db:migrate    # Run database migrations
 npm run db:seed       # Seed with sample data
-npm run dev           # Start dev server on http://localhost:3002
+npm run dev           # Start dev server on http://localhost:3001
 ```
 
 ### Frontend Setup
