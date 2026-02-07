@@ -4,6 +4,8 @@ I thought the initial exploration was strong, I found good bugs, and created a g
 
 What really threw me was during testing, I found a bug where registering new users, and then logging in as a previous user, was just showing the expenses of the newly created user. However the playwright automation couldn't reproduce the bug.
 
+In short, these tests do NOT reflect my best work, in fact I wouldn't call them my work at all. I took a risk and it didn't work, but I've learned a lot from it. What I hope you'll see value in is my exploration/modeling and AI prompting and techniques, which most of the time produce better results.
+
 # Expense Tracker - Interview Exercise
 
 A simple expense tracking application built with React, TypeScript, Node.js, and SQLite.
