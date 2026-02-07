@@ -1,0 +1,23 @@
+{
+  "name": "expense-tracker-2",
+  "version": "1.0.0",
+  "description": "A simple expense tracking application built with React, TypeScript, Node.js, and SQLite.",
+  "main": "index.js",
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ChifferCo/expense-tracker-interview.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/ChifferCo/expense-tracker-interview/issues"
+  },
+  "homepage": "https://github.com/ChifferCo/expense-tracker-interview#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "@types/node": "^25.2.1"
+  }
+}
