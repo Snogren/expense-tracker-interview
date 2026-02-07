@@ -2,6 +2,8 @@ Well, this didn't go as I hoped.
 
 I thought the initial exploration was strong, I found good bugs, and created a good working system model. I also displayed some AI techniques I've learned. But then, I handed off too much to the AI to create all at once, and then had to deal with slop. By the time I realized my error, and wished to start over and create the tests in smaller pieces, I had already spent 1 hour and 40 minutes. 
 
+What really threw me was during testing, I found a bug where registering new users, and then logging in as a previous user, was just showing the expenses of the newly created user. However the playwright automation couldn't reproduce the bug.
+
 # Expense Tracker - Interview Exercise
 
 A simple expense tracking application built with React, TypeScript, Node.js, and SQLite.
